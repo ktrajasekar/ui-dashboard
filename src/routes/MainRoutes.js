@@ -9,7 +9,8 @@ const DashboardDefault = Loadable(lazy(() => import('pages/dashboard')));
 
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/SamplePage')));
-
+const ReactTookitAPIPapge = Loadable(lazy(() => import('pages/api-calls')));
+const ReactAPIDisplay = Loadable(lazy(() => import('pages/api-display')));
 //Table
 const EnhancedTable = Loadable(lazy(() => import('pages/table')));
 
@@ -28,6 +29,14 @@ const MainRoutes = {
         {
             path: '/',
             element: <EnhancedTable />
+        },
+        {
+            path: 'api',
+            element: <ReactTookitAPIPapge />
+        },
+        {
+            path: 'api-display',
+            element: <ReactAPIDisplay />
         },
         {
             path: 'color',
