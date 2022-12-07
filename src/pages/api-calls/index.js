@@ -1,7 +1,7 @@
 import React from 'react';
 import MainCard from 'components/MainCard';
 import CircularProgress from '@mui/material/CircularProgress';
-import useFetch from 'utils/cutom-fetch';
+import useFetch from 'utils/custom-fetch';
 import { useDispatch, useSelector } from 'react-redux';
 import { savePeopleData } from 'store/reducers/api';
 
