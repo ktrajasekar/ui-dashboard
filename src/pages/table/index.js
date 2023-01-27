@@ -21,6 +21,13 @@ import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import CloseIcon from '@mui/icons-material/Close';
+import { styled } from '@mui/material/styles';
 
 function createData(name, calories, fat, carbs, protein) {
     return {
@@ -215,11 +222,21 @@ export default function EnhancedTable() {
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
+    const [open, setOpen] = React.useState(false);
+    const [value, setValue] = React.useState({});
+    const [apiValue, setApiValue] = React.useState({});
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
+    };
+
+    React.useEffect(() => {
+        setTimeout(() => {}, 2000);
+    }, []);
+
+    const handleClose = () => {
+        setOpen(false);
     };
 
     const handleSelectAllClick = (event) => {
@@ -232,20 +249,18 @@ export default function EnhancedTable() {
     };
 
     const handleClick = (event, name) => {
-        const selectedIndex = selected.indexOf(name);
-        let newSelected = [];
-
-        if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, name);
-        } else if (selectedIndex === 0) {
-            newSelected = newSelected.concat(selected.slice(1));
-        } else if (selectedIndex === selected.length - 1) {
-            newSelected = newSelected.concat(selected.slice(0, -1));
-        } else if (selectedIndex > 0) {
-            newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
-        }
-
-        setSelected(newSelected);
+        // const selectedIndex = selected.indexOf(name);
+        // let newSelected = [];
+        // if (selectedIndex === -1) {
+        //     newSelected = newSelected.concat(selected, name);
+        // } else if (selectedIndex === 0) {
+        //     newSelected = newSelected.concat(selected.slice(1));
+        // } else if (selectedIndex === selected.length - 1) {
+        //     newSelected = newSelected.concat(selected.slice(0, -1));
+        // } else if (selectedIndex > 0) {
+        //     newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
+        // }
+        // setSelected(newSelected);
     };
 
     const handleChangePage = (event, newPage) => {
@@ -265,82 +280,156 @@ export default function EnhancedTable() {
 
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    const editBtn = (row) => {
+        console.log(row);
+        setOpen(true);
+        setValue(row);
+        setApiValue({});
+    };
+    const BootstrapDialog = styled(Dialog)(({ theme }) => ({
+        '& .MuiDialogContent-root': {
+            padding: theme.spacing(2)
+        },
+        '& .MuiDialogActions-root': {
+            padding: theme.spacing(1)
+        }
+    }));
+    const fetchAPI = () => {
+        fetch(`https://dummyjson.com/products/1`)
+            .then((response) => response.json())
+            .then((actualData) => {
+                console.log(actualData);
+                setApiValue(actualData);
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+    };
+    function BootstrapDialogTitle(props) {
+        const { children, onClose, ...other } = props;
 
+        return (
+            <DialogTitle sx={{ m: 0, p: 2 }} {...other}>
+                {children}
+                {onClose ? (
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: (theme) => theme.palette.grey[500]
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                ) : null}
+            </DialogTitle>
+        );
+    }
     return (
-        <Box sx={{ width: '100%' }}>
-            <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} />
-                <TableContainer>
-                    <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={dense ? 'small' : 'medium'}>
-                        <EnhancedTableHead
-                            numSelected={selected.length}
-                            order={order}
-                            orderBy={orderBy}
-                            onSelectAllClick={handleSelectAllClick}
-                            onRequestSort={handleRequestSort}
-                            rowCount={rows.length}
-                        />
-                        <TableBody>
-                            {/* if you don't need to support IE11, you can replace the `stableSort` call with:
+        <>
+            <Box sx={{ width: '100%' }}>
+                <Paper sx={{ width: '100%', mb: 2 }}>
+                    <EnhancedTableToolbar numSelected={selected.length} />
+                    <TableContainer>
+                        <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={dense ? 'small' : 'medium'}>
+                            <EnhancedTableHead
+                                numSelected={selected.length}
+                                order={order}
+                                orderBy={orderBy}
+                                onSelectAllClick={handleSelectAllClick}
+                                onRequestSort={handleRequestSort}
+                                rowCount={rows.length}
+                            />
+                            <TableBody>
+                                {/* if you don't need to support IE11, you can replace the `stableSort` call with:
                  rows.sort(getComparator(order, orderBy)).slice() */}
-                            {stableSort(rows, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
-                                    const isItemSelected = isSelected(row.name);
-                                    const labelId = `enhanced-table-checkbox-${index}`;
+                                {stableSort(rows, getComparator(order, orderBy))
+                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((row, index) => {
+                                        const isItemSelected = isSelected(row.name);
+                                        const labelId = `enhanced-table-checkbox-${index}`;
 
-                                    return (
-                                        <TableRow
-                                            hover
-                                            onClick={(event) => handleClick(event, row.name)}
-                                            role="checkbox"
-                                            aria-checked={isItemSelected}
-                                            tabIndex={-1}
-                                            key={row.name}
-                                            selected={isItemSelected}
-                                        >
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    color="primary"
-                                                    checked={isItemSelected}
-                                                    inputProps={{
-                                                        'aria-labelledby': labelId
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell component="th" id={labelId} scope="row" padding="none">
-                                                {row.name}
-                                            </TableCell>
-                                            <TableCell align="right">{row.calories}</TableCell>
-                                            <TableCell align="right">{row.fat}</TableCell>
-                                            <TableCell align="right">{row.carbs}</TableCell>
-                                            <TableCell align="right">{row.protein}</TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            {emptyRows > 0 && (
-                                <TableRow
-                                    style={{
-                                        height: (dense ? 33 : 53) * emptyRows
-                                    }}
-                                >
-                                    <TableCell colSpan={6} />
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={rows.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Paper>
-            <FormControlLabel control={<Switch checked={dense} onChange={handleChangeDense} />} label="Dense padding" />
-        </Box>
+                                        return (
+                                            <TableRow
+                                                hover
+                                                onClick={(event) => handleClick(event, row.name)}
+                                                role="checkbox"
+                                                aria-checked={isItemSelected}
+                                                tabIndex={-1}
+                                                key={row.name}
+                                                selected={isItemSelected}
+                                            >
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        color="primary"
+                                                        checked={isItemSelected}
+                                                        inputProps={{
+                                                            'aria-labelledby': labelId
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell component="th" id={labelId} scope="row" padding="none">
+                                                    {row.name}
+                                                </TableCell>
+                                                <TableCell align="right">{row.calories}</TableCell>
+                                                <TableCell align="right">{row.fat}</TableCell>
+                                                <TableCell align="right">{row.carbs}</TableCell>
+                                                <TableCell align="right">{row.protein}</TableCell>
+                                                <TableCell align="right">
+                                                    <button onClick={(event) => editBtn(row)}>edit</button>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                {emptyRows > 0 && (
+                                    <TableRow
+                                        style={{
+                                            height: (dense ? 33 : 53) * emptyRows
+                                        }}
+                                    >
+                                        <TableCell colSpan={6} />
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]}
+                        component="div"
+                        count={rows.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                </Paper>
+                <FormControlLabel control={<Switch checked={dense} onChange={handleChangeDense} />} label="Dense padding" />
+            </Box>
+            <BootstrapDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
+                <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
+                    {value.name} Data
+                </BootstrapDialogTitle>
+                <DialogContent dividers>
+                    <h3>Edited row value below</h3>
+                    <code>{JSON.stringify(value, null, 2)}</code>
+                    <br />
+                    <br />
+                    <Button autoFocus onClick={fetchAPI}>
+                        Dynamic Fetch
+                    </Button>
+                    <br />
+                    <h3>API fetch value below</h3>
+                    <code>{JSON.stringify(apiValue, null, 2)}</code>
+                </DialogContent>
+                <DialogActions>
+                    <Button autoFocus onClick={handleClose}>
+                        Save changes
+                    </Button>
+                </DialogActions>
+            </BootstrapDialog>
+        </>
     );
 }
